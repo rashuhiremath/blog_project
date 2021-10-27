@@ -42,7 +42,7 @@ blogsRouter.post("/",blogValidationMiddlewares,async (req,res,next)=>{
     try {
         const blogs = await readBlogs()
         const newBlog = {...req.body, id:uniqid(), createdAt:new Date()}
-        blogs.pu
+        blogs.push(newBlog)
         await writeBlogs(blogs)
         res.status(201).send(blogs.id)
         
