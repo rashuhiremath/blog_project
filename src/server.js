@@ -2,11 +2,15 @@ import express from "express"
 import listEndpoints from "express-list-endpoints";
 import blogsRouter from "./Blogs/index.js"
 import cors from "cors";
+import {join} from "path"
+
+const imageFolderPath = join(process.cwd(),"./public")
 
 
 const server = express()
 server.use(cors())
 server.use(express.json())
+server.use(express.static(imageFolderPath))
 
 server.use("/blogs",blogsRouter)
 
