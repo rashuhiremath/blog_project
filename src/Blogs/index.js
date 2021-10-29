@@ -3,12 +3,14 @@ import uniqid from "uniqid";
 import createError from "http-errors";
 import multer from "multer";
 import json2csv from "json2csv"
+import { pipeline } from "stream";
 import {
   readBlogs,
   writeBlogs,
   saveProductPicture,
-  getBooksReadableStream,
+  
 } from "../libfile/fs_tool.js";
+import { getBooksReadableStream } from "../libfile/fs_tool.js";
 import { blogValidationMiddlewares } from "../libfile/validation.js";
 import { extname } from "path";
 
@@ -23,6 +25,29 @@ blogsRouter.get("/", async (req, res, next) => {
   }
 });
 
+
+blogsRouter.get("/downloadCSV", (req, res, next) => {
+    try {
+
+        console.log("req?")
+      res.setHeader("Content-Disposition", "attachment; filename=blogs.csv")
+
+
+      const source = getBooksReadableStream()
+
+      console.log(source)
+
+      const transform = new json2csv.Transform({ fields: ["name", "surname", "email", "DOB"] })
+      const destination = res
+  
+      pipeline(source, transform, destination, err => {
+        if (err) next(err)
+      })
+    } catch (error) {
+        console.log(error)
+      next(error)
+    }
+  })
 //get id by blog
 blogsRouter.get("/:blogId", async (req, res, next) => {
   try {
@@ -32,7 +57,7 @@ blogsRouter.get("/:blogId", async (req, res, next) => {
       console.log(singleBlog);
       res.status(200).send(singleBlog);
     } else {
-      // next(createError(404, `review with id ${req.params.id} not found`))
+       next(createError(404, `review with id ${req.params.id} not found`))
     }
   } catch (error) {
     next(error);
@@ -113,18 +138,5 @@ blogsRouter.post(
   }
 );
 // convert blog.json file csv
-blogsRouter.get("/downloadCSV", (req, res, next) => {
-    try {
-      res.setHeader("Content-Disposition", "attachment; filename=blogs.csv")
-      const source = getBooksReadableStream()
-      const transform = new json2csv.Transform({ fields: ["name", "surname", "email", "DOB"] })
-      const destination = res
-  
-      pipeline(source, transform, destination, err => {
-        if (err) next(err)
-      })
-    } catch (error) {
-      next(error)
-    }
-  })
+
 export default blogsRouter;
